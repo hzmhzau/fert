@@ -1,0 +1,29 @@
+{
+"type": "FeatureCollection",
+"name": "长江中下游稻麦轮作农时表",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "襄阳", "crop": "冬小麦", "planting_time": "10月20日 – 11月5日", "remark": "鄂北岗地，播期较早" }, "geometry": { "type": "Point", "coordinates": [ 112.1439, 32.0423 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "襄阳", "crop": "水稻", "planting_time": "5月20日 – 6月5日", "remark": "避开梅雨" }, "geometry": { "type": "Point", "coordinates": [ 112.1459, 32.0443 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "随州", "crop": "冬小麦", "planting_time": "10月25日 – 11月10日", "remark": "抢收抢种" }, "geometry": { "type": "Point", "coordinates": [ 113.3765, 31.7173 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "随州", "crop": "水稻", "planting_time": "5月25日 – 6月10日", "remark": "栽插期适中" }, "geometry": { "type": "Point", "coordinates": [ 113.3785, 31.7193 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "武汉", "crop": "冬小麦", "planting_time": "10月30日 – 11月15日", "remark": "江汉平原，播期较晚" }, "geometry": { "type": "Point", "coordinates": [ 114.3053, 30.5965 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "武汉", "crop": "水稻", "planting_time": "5月25日 – 6月15日", "remark": "涵盖早中稻" }, "geometry": { "type": "Point", "coordinates": [ 114.3073, 30.5985 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "荆州", "crop": "冬小麦", "planting_time": "10月30日 – 11月15日", "remark": "低湖田，需抢晴" }, "geometry": { "type": "Point", "coordinates": [ 112.2381, 30.3275 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "荆州", "crop": "水稻", "planting_time": "5月25日 – 6月15日", "remark": "避开梅雨" }, "geometry": { "type": "Point", "coordinates": [ 112.2401, 30.3295 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "孝感", "crop": "冬小麦", "planting_time": "10月28日 – 11月12日", "remark": "过渡带" }, "geometry": { "type": "Point", "coordinates": [ 113.9041, 30.9167 ] } },
+{ "type": "Feature", "properties": { "province": "湖北省", "city": "孝感", "crop": "水稻", "planting_time": "5月22日 – 6月10日", "remark": "栽插期较早" }, "geometry": { "type": "Point", "coordinates": [ 113.9061, 30.9187 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "合肥", "crop": "冬小麦", "planting_time": "10月25日 – 11月10日", "remark": "适期早播" }, "geometry": { "type": "Point", "coordinates": [ 117.283, 31.8611 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "合肥", "crop": "水稻", "planting_time": "5月20日 – 6月5日", "remark": "抢水栽插" }, "geometry": { "type": "Point", "coordinates": [ 117.285, 31.8631 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "安庆", "crop": "冬小麦", "planting_time": "10月30日 – 11月15日", "remark": "沿江回暖快" }, "geometry": { "type": "Point", "coordinates": [ 117.0214, 30.5127 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "安庆", "crop": "水稻", "planting_time": "5月25日 – 6月10日", "remark": "芒种前完成" }, "geometry": { "type": "Point", "coordinates": [ 117.0234, 30.5147 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "芜湖", "crop": "冬小麦", "planting_time": "10月30日 – 11月15日", "remark": "水网密集" }, "geometry": { "type": "Point", "coordinates": [ 118.4331, 31.3505 ] } },
+{ "type": "Feature", "properties": { "province": "安徽省", "city": "芜湖", "crop": "水稻", "planting_time": "5月28日 – 6月15日", "remark": "弹性较大" }, "geometry": { "type": "Point", "coordinates": [ 118.4351, 31.3525 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "扬州", "crop": "冬小麦", "planting_time": "10月25日 – 11月5日", "remark": "里下河，抢晴" }, "geometry": { "type": "Point", "coordinates": [ 119.4129, 32.3932 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "扬州", "crop": "水稻", "planting_time": "6月1日 – 6月15日", "remark": "迟熟中粳" }, "geometry": { "type": "Point", "coordinates": [ 119.4149, 32.3952 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "泰州", "crop": "冬小麦", "planting_time": "10月25日 – 11月5日", "remark": "同扬州" }, "geometry": { "type": "Point", "coordinates": [ 120.159, 32.4849 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "泰州", "crop": "水稻", "planting_time": "6月1日 – 6月15日", "remark": "赶在梅雨前" }, "geometry": { "type": "Point", "coordinates": [ 120.161, 32.4869 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "南通", "crop": "冬小麦", "planting_time": "10月20日 – 10月30日", "remark": "沿海，播期早" }, "geometry": { "type": "Point", "coordinates": [ 120.8646, 32.0162 ] } },
+{ "type": "Feature", "properties": { "province": "江苏省", "city": "南通", "crop": "水稻", "planting_time": "5月25日 – 6月10日", "remark": "适时灌水压盐" }, "geometry": { "type": "Point", "coordinates": [ 120.8666, 32.0182 ] } }
+]
+}
