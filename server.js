@@ -1,6 +1,5 @@
 /**
  * 科学施肥推荐系统 - Node.js/Express 后台服务器
- * 对应原 Python Flask app.py
  * @version 1.0.0
  */
 
@@ -186,7 +185,9 @@ function parsePercentRange(s) {
   const nums = String(s).match(/(\d+(?:\.\d+)?)/g);
   if (!nums) return null;
   const vals = nums.map(Number);
-  return vals.reduce((a, b) => a + b, 0) / vals.length / 100.0;
+  // 取最大值（上限）作为肥料利用率
+  // 利用率越高，计算的肥料用量越少
+  return Math.max(...vals) / 100.0;
 }
 
 function loadFertilizerGeoJSON() {
@@ -253,7 +254,7 @@ class CropRotationFertilizerModel {
   constructor() {
     this.defaultParams = {
       urea_N_content: 0.46,
-      superphosphate_P_content: 0.12,
+      superphosphate_P_content: 0.46,  // 重过磷酸钙含P2O5约46%
       potassium_chloride_K_content: 0.60,
       rice: {
         N_per_100kg: 2.2, P_per_100kg: 1.2, K_per_100kg: 2.5,
@@ -454,7 +455,9 @@ class CropRotationFertilizerModel {
     const omImpact = this.defaultParams.soil_impact.organic_matter_impact;
     const phImpact = this.defaultParams.soil_impact.ph_impact_on_p.adjustment(soilPh);
     let nSupply = soilN * convFactor * nCorr * omImpact.N(organicMatter);
-    let pSupply = soilP * convFactor * pCorr * omImpact.P(organicMatter) * phImpact;
+    // 土壤供磷量：土壤有效磷测定值已经反映了土壤实际供磷能力，不再额外乘以pH系数
+    // pH对磷有效性的影响已体现在测定值中，额外乘pH系数会导致双重惩罚
+    let pSupply = soilP * convFactor * pCorr * omImpact.P(organicMatter);
     let kSupply = soilK * convFactor * kCorr * omImpact.K(organicMatter);
     return [nSupply, pSupply, kSupply, {
       organic_matter_impact: {
@@ -562,7 +565,7 @@ class CropRotationFertilizerModel {
 
     const { soil_N, soil_P, soil_K, nutrient_levels, data_source, is_default, use_custom } = soilData;
     const organicMatter = inputParams.organic_matter ?? 20.7;
-    const soilPh = inputParams.soil_ph ?? 8.18;
+    const soilPh = inputParams.soil_ph ?? 7.0;
     const strawAmount = inputParams.straw_return_amount ?? (cropType === 'rice' ? 600 : 700);
 
     // 确定播期
@@ -596,9 +599,6 @@ class CropRotationFertilizerModel {
     // 3. 秸秆还田供肥量
     const [nStraw, pStraw, kStraw, nAdditional] = this.calculateStrawSupply(strawAmount, strawSourceType);
 
-    // 4. pH影响
-    const phImpactOnP = this.defaultParams.soil_impact.ph_impact_on_p.adjustment(soilPh);
-
     // 5. 肥料利用率 (从GeoJSON)
     let [nEffGeo, pEffGeo, kEffGeo] = [null, null, null];
     if (inputParams.lon != null && inputParams.lat != null) {
@@ -608,11 +608,16 @@ class CropRotationFertilizerModel {
     const nEff = nEffGeo ?? cropP.N_fertilizer_efficiency;
     const pEff = pEffGeo ?? cropP.P_fertilizer_efficiency;
     const kEff = kEffGeo ?? cropP.K_fertilizer_efficiency;
-    const pEfficiency = pEff * phImpactOnP;
+    // 磷肥利用率直接使用默认值，不再乘以pH系数
+    // 原因：土壤有效磷测定值已反映实际供磷能力，不应双重惩罚
+    const pEfficiency = pEff;
 
     // 6. 计算需要补充的肥料量
     const nFertilizer = Math.max(0, (nReq - nSoil - nStraw) / nEff);
-    const pFertilizer = Math.max(0, (pReq - pSoil - pStraw) / pEfficiency);
+    // 磷肥计算：使用默认磷肥利用率
+    // 土壤有效磷测定值已反映实际供磷能力，不再额外乘pH系数
+    // 重过磷酸钙是水溶性磷肥，其当季利用率约15-25%
+    const pFertilizer = Math.max(0, (pReq - pSoil - pStraw) / pEff);
     const kFertilizer = Math.max(0, (kReq - kSoil - kStraw) / kEff);
 
     // 7. 调整肥料运筹比例
@@ -631,7 +636,7 @@ class CropRotationFertilizerModel {
           '尿素_基肥': Math.round(nBase / dp.urea_N_content * 10) / 10,
           '尿素_分蘖肥': Math.round(nTiller / dp.urea_N_content * 10) / 10,
           '尿素_穗肥': Math.round(nPanicle / dp.urea_N_content * 10) / 10,
-          '过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
+          '重过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
           '氯化钾_基肥': Math.round(kFertilizer * 0.6 / dp.potassium_chloride_K_content * 10) / 10,
           '氯化钾_穗肥': Math.round(kFertilizer * 0.4 / dp.potassium_chloride_K_content * 10) / 10,
         },
@@ -659,7 +664,7 @@ class CropRotationFertilizerModel {
         '肥料用量_公斤每亩': {
           '配方肥_基肥': Math.round(formulaKg * 10) / 10,
           '尿素_拔节肥': Math.round(ureaTilleringKg * 10) / 10,
-          '过磷酸钙_基肥': Math.round(formulaP / dp.superphosphate_P_content * 10) / 10,
+          '重过磷酸钙_基肥': Math.round(formulaP / dp.superphosphate_P_content * 10) / 10,
           '氯化钾_基肥': Math.round(formulaK / dp.potassium_chloride_K_content * 10) / 10,
         },
         '养分用量_公斤每亩': {
@@ -1596,7 +1601,7 @@ app.post('/calculate', (req, res) => {
       sowing_date: sowingDate,
       lon, lat,
       organic_matter: 20.7,
-      soil_ph: 8.18,
+      soil_ph: 7.0,
       straw_return_amount: cropType === '水稻' ? 600 : 700,
       temperature_forecast: cropType === '水稻' ? 22.5 : 12.0
     };
@@ -1681,7 +1686,7 @@ app.post('/calculate', (req, res) => {
         soil_k: customSoilData.K ?? null,
         use_custom_soil: useCustomSoil ? 1 : 0,
         organic_matter: 20.7,
-        soil_ph: 8.18,
+        soil_ph: 7.0,
         straw_return_amount: cropType === '水稻' ? 600 : 700,
         fertilizer_recommendation: JSON.stringify({
           fertilizer_usage: fertilizerUsage,
@@ -1756,7 +1761,7 @@ function generateSimulationResponse(cropType, targetYield, sowingDate, lon, lat,
       '尿素_基肥': Math.round(targetYield * 0.012 * 10) / 10,
       '尿素_分蘖肥': Math.round(targetYield * 0.006 * 10) / 10,
       '尿素_穗肥': Math.round(targetYield * 0.006 * 10) / 10,
-      '过磷酸钙_基肥': Math.round(targetYield * 0.002 * 10) / 10,
+      '重过磷酸钙_基肥': Math.round(targetYield * 0.002 * 10) / 10,
       '氯化钾_基肥': Math.round(targetYield * 0.004 * 10) / 10
     };
     guidance = ['1. 基肥占总氮肥的50%左右', '2. 分蘖肥移栽后7-10天', '3. 穗肥幼穗分化初期', '4. 注意浅水施肥', '5. （模拟数据）此为示例结果'];
@@ -1764,7 +1769,7 @@ function generateSimulationResponse(cropType, targetYield, sowingDate, lon, lat,
     fertilizerUsage = {
       '配方肥_基肥': Math.round(targetYield * 0.1 * 10) / 10,
       '尿素_拔节肥': Math.round(targetYield * 0.03 * 10) / 10,
-      '过磷酸钙_基肥': Math.round(targetYield * 0.025 * 10) / 10,
+      '重过磷酸钙_基肥': Math.round(targetYield * 0.025 * 10) / 10,
       '氯化钾_基肥': Math.round(targetYield * 0.02 * 10) / 10
     };
     guidance = ['1. 基肥占总氮肥的60%左右', '2. 拔节肥起身拔节期', '3. 孕穗肥孕穗期', '4. 深施覆土', '5. （模拟数据）此为示例结果'];

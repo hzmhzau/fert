@@ -1023,12 +1023,12 @@ class FormHandler {
             "尿素_基肥": Utils.formatNumber(data.yield * 0.012),
             "尿素_分蘖肥": Utils.formatNumber(data.yield * 0.006),
             "尿素_穗肥": Utils.formatNumber(data.yield * 0.006),
-            "过磷酸钙_基肥": Utils.formatNumber(data.yield * 0.002),
+            "重过磷酸钙_基肥": Utils.formatNumber(data.yield * 0.002),
             "氯化钾_基肥": Utils.formatNumber(data.yield * 0.004)
         } : {
             "配方肥_基肥": Utils.formatNumber(data.yield * 0.1),
             "尿素_拔节肥": Utils.formatNumber(data.yield * 0.03),
-            "过磷酸钙_基肥": Utils.formatNumber(data.yield * 0.025),
+            "重过磷酸钙_基肥": Utils.formatNumber(data.yield * 0.025),
             "氯化钾_基肥": Utils.formatNumber(data.yield * 0.02)
         };
         
@@ -1745,7 +1745,7 @@ class ResultRenderer {
     calculateFertilizerSupply(usage) {
         const content = {
             '尿素': 0.46,
-            '过磷酸钙': 0.12,
+            '重过磷酸钙': 0.46,  // 重过磷酸钙含P2O5约46%
             '氯化钾': 0.60,
             '配方肥_N': 0.20,
             '配方肥_P': 0.15,
@@ -1756,7 +1756,7 @@ class ResultRenderer {
         
         for (const [key, value] of Object.entries(usage)) {
             if (key.includes('尿素')) N += value * content['尿素'];
-            else if (key.includes('过磷酸钙')) P += value * content['过磷酸钙'];
+            else if (key.includes('重过磷酸钙')) P += value * content['重过磷酸钙'];
             else if (key.includes('氯化钾')) K += value * content['氯化钾'];
             else if (key.includes('配方肥')) {
                 N += value * content['配方肥_N'];

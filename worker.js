@@ -129,7 +129,7 @@ class CropRotationFertilizerModel {
           '尿素_基肥': Math.round(nFertilizer * 0.50 / dp.urea_N_content * 10) / 10,
           '尿素_分蘖肥': Math.round(nFertilizer * 0.25 / dp.urea_N_content * 10) / 10,
           '尿素_穗肥': Math.round(nFertilizer * 0.25 / dp.urea_N_content * 10) / 10,
-          '过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
+          '重过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
           '氯化钾_基肥': Math.round(kFertilizer * 0.6 / dp.potassium_chloride_K_content * 10) / 10,
           '氯化钾_穗肥': Math.round(kFertilizer * 0.4 / dp.potassium_chloride_K_content * 10) / 10,
         },
@@ -140,7 +140,7 @@ class CropRotationFertilizerModel {
         '肥料用量_公斤每亩': {
           '配方肥_基肥': Math.round(targetYield * 0.1 * 10) / 10,
           '尿素_拔节肥': Math.round(targetYield * 0.03 * 10) / 10,
-          '过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
+          '重过磷酸钙_基肥': Math.round(pFertilizer / dp.superphosphate_P_content * 10) / 10,
           '氯化钾_基肥': Math.round(kFertilizer / dp.potassium_chloride_K_content * 10) / 10,
         },
         '施肥时期建议': { '基肥': '播种前整地时深施', '拔节肥': '起身拔节期结合灌水追施' }
