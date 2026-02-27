@@ -1,11 +1,13 @@
 /**
  * Cloudflare Workers 版本 - 科学施肥推荐系统 API
  * 使用 Hono 框架（轻量级、兼容 Workers）
+ *
+ * 部署方式：推荐使用 Cloudflare Pages + Functions
+ * 或者部署纯 API 模式（不带静态文件）
  */
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { serveStatic } from 'hono/cloudflare-workers';
 
 const app = new Hono();
 
@@ -13,8 +15,40 @@ const app = new Hono();
 app.use('/*', cors());
 
 // ==================== 静态文件服务 ====================
-app.get('/', serveStatic({ path: './index.html' }));
-app.get('/static/*', serveStatic({ root: './' }));
+// 注意：Cloudflare Workers 纯 API 模式不直接支持静态文件
+// 如需托管前端，请使用 Cloudflare Pages
+// 这里提供主页重定向说明
+app.get('/', (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>科学施肥推荐系统 API</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    h1 { color: #28a745; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
+    .endpoint { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+    .method { font-weight: bold; color: #28a745; }
+  </style>
+</head>
+<body>
+  <h1>🌱 科学施肥推荐系统 API</h1>
+  <p>API 服务运行正常！</p>
+  <h2>可用的 API 端点：</h2>
+  <div class="endpoint"><span class="method">GET</span> <code>/health</code> - 健康检查</div>
+  <div class="endpoint"><span class="method">POST</span> <code>/calculate</code> - 计算施肥方案</div>
+  <div class="endpoint"><span class="method">GET</span> <code>/test_geotiff?lat=30.5&lon=114.3</code> - 获取土壤数据</div>
+  <div class="endpoint"><span class="method">GET</span> <code>/api/weather?lat=30.5&lon=114.3</code> - 获取天气数据</div>
+  <div class="endpoint"><span class="method">POST</span> <code>/api/fertilizer_timing</code> - 施肥时机建议</div>
+  <div class="endpoint"><span class="method">POST</span> <code>/api/simulate</code> - 模拟计算</div>
+  <hr>
+  <p><small>如需完整前端界面，请使用 Cloudflare Pages 部署。</small></p>
+</body>
+</html>
+  `);
+});
 
 // ==================== 辅助函数 ====================
 function getNutrientLevel(value, type) {

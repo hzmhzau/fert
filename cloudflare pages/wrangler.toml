@@ -1,0 +1,37 @@
+# Cloudflare Workers 配置文件
+# 文档: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "fert"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# 账户ID（可在 Cloudflare Dashboard 右侧找到）
+# 取消注释并填入您的账户ID
+account_id = "248da56bd40503a8f5638936807d648d"
+
+# 生产环境配置
+[env.production]
+name = "fertilizer-system-prod"
+# 生产环境变量（非敏感信息）
+vars = { ENVIRONMENT = "production" }
+
+# 开发环境配置
+[env.development]
+name = "fertilizer-system-dev"
+vars = { ENVIRONMENT = "development" }
+
+# ========================================
+# 注意：已移除 [site] 配置
+# ========================================
+# Workers 纯 API 模式不支持静态文件托管
+# 如需部署前端，请使用 Cloudflare Pages 或 Vercel
+
+# 敏感信息配置说明:
+# 请在 Cloudflare Dashboard 中配置 Secrets:
+# Workers & Pages → 选择你的 Worker → Settings → Variables → Add variable
+# 
+# 需要配置的 Secrets:
+# - QWEATHER_PRIVATE_KEY: 和风天气私钥
+# - QWEATHER_KEY_ID: 和风天气凭据ID
+# - QWEATHER_PROJECT_ID: 和风天气项目ID
+# - QWEATHER_API_HOST: 和风天气API域名

@@ -1,0 +1,37 @@
+{
+  "name": "fertilizer-recommendation-system",
+  "version": "1.0.0",
+  "description": "科学施肥推荐系统 - Node.js/Express 后台",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "deploy:pages": "wrangler pages deploy . --project-name=fertilizer-system",
+    "deploy:worker": "wrangler deploy worker.js",
+    "dev:worker": "wrangler dev worker.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.2",
+    "geotiff": "^3.0.3",
+    "hono": "^4.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "fertilizer",
+    "agriculture",
+    "GIS",
+    "nodejs",
+    "express",
+    "cloudflare",
+    "workers"
+  ],
+  "license": "MIT"
+}
