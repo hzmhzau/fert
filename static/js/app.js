@@ -59,7 +59,27 @@ class GeoLocationManager {
     }
 
     /**
-     * 获取用户位置（优先级：GPS → 网络定位 → 默认位置）
+     * 检测是否为安全上下文（HTTPS 或 localhost）
+     */
+    isSecureContext() {
+        return window.isSecureContext ||
+               location.protocol === 'https:' ||
+               location.hostname === 'localhost' ||
+               location.hostname === '127.0.0.1';
+    }
+
+    /**
+     * 强制重新获取位置（清除缓存）
+     */
+    async forceGetUserLocation() {
+        console.log('🌍 强制重新获取用户位置...');
+        this.currentLocation = null;
+        return this.getUserLocation();
+    }
+
+    /**
+     * 获取用户位置（优先级：网络定位 → GPS定位 → 默认位置）
+     * 注意：HTTP 环境下 GPS 定位不可用，优先使用网络定位
      */
     async getUserLocation() {
         console.log('🌍 开始获取用户位置...');
@@ -69,20 +89,28 @@ class GeoLocationManager {
             return this.currentLocation;
         }
 
-        // 方法1: 尝试 GPS 定位
-        const gpsLocation = await this.requestGPSLocation();
-        if (gpsLocation) {
-            this.currentLocation = gpsLocation;
-            console.log('✓ GPS 定位成功');
-            return gpsLocation;
-        }
+        // 检测是否为安全上下文
+        const isSecure = this.isSecureContext();
+        console.log(`🔒 安全上下文: ${isSecure ? '是' : '否'} (${location.protocol})`);
 
-        // 方法2: 尝试网络定位
+        // 方法1: 优先尝试网络定位（HTTP/HTTPS 都可用）
         const networkLocation = await this.requestNetworkLocation();
         if (networkLocation) {
             this.currentLocation = networkLocation;
             console.log('✓ 网络定位成功');
             return networkLocation;
+        }
+
+        // 方法2: 仅在安全上下文中尝试 GPS 定位
+        if (isSecure) {
+            const gpsLocation = await this.requestGPSLocation();
+            if (gpsLocation) {
+                this.currentLocation = gpsLocation;
+                console.log('✓ GPS 定位成功');
+                return gpsLocation;
+            }
+        } else {
+            console.warn('⚠️ HTTP 环境，跳过 GPS 定位（需要 HTTPS）');
         }
 
         // 方法3: 返回默认位置
@@ -93,12 +121,19 @@ class GeoLocationManager {
     }
 
     /**
-     * 请求 GPS 定位
+     * 请求 GPS 定位（仅在 HTTPS 或 localhost 下可用）
      */
     requestGPSLocation() {
         return new Promise((resolve) => {
             if (!navigator.geolocation) {
                 console.warn('⚠️ 浏览器不支持 GPS 定位');
+                resolve(null);
+                return;
+            }
+
+            // 再次检查安全上下文
+            if (!this.isSecureContext()) {
+                console.warn('⚠️ 非 HTTPS 环境，GPS 定位不可用');
                 resolve(null);
                 return;
             }
@@ -112,15 +147,27 @@ class GeoLocationManager {
                 (position) => {
                     clearTimeout(timeoutId);
                     const { latitude, longitude } = position.coords;
-                    resolve({ 
-                        lon: longitude, 
-                        lat: latitude, 
+                    resolve({
+                        lon: longitude,
+                        lat: latitude,
                         source: 'GPS 定位'
                     });
                 },
                 (error) => {
                     clearTimeout(timeoutId);
-                    console.warn('⚠️ GPS 定位失败');
+                    let errorMsg = 'GPS 定位失败';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = '用户拒绝了定位请求';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = '位置信息不可用';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = '定位请求超时';
+                            break;
+                    }
+                    console.warn(`⚠️ ${errorMsg}`);
                     resolve(null);
                 },
                 {
@@ -134,6 +181,7 @@ class GeoLocationManager {
 
     /**
      * 请求网络定位（高德地图IP定位）
+     * 注意：HTTP 环境下使用 CitySearch 纯 IP 定位，HTTPS 下使用 Geolocation 精准定位
      */
     requestNetworkLocation() {
         return new Promise((resolve) => {
@@ -143,32 +191,84 @@ class GeoLocationManager {
                 return;
             }
 
-            try {
-                AMap.plugin('AMap.Geolocation', () => {
-                    const geolocation = new AMap.Geolocation({
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        noCache: true
-                    });
+            const isSecure = this.isSecureContext ? this.isSecureContext() :
+                (window.isSecureContext || location.protocol === 'https:' ||
+                 location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
-                    geolocation.getCurrentPosition((status, result) => {
-                        if (status === 'complete' && result.position) {
-                            const { lng, lat } = result.position;
-                            resolve({ 
-                                lon: lng, 
-                                lat: lat, 
-                                source: '网络定位'
-                            });
-                        } else {
-                            console.warn('⚠️ 网络定位失败');
-                            resolve(null);
-                        }
-                    });
-                });
+            try {
+                if (isSecure) {
+                    // HTTPS 环境：使用 Geolocation 精准定位
+                    console.log('🌐 使用 Geolocation 精准定位...');
+                    this._requestGeolocation(resolve);
+                } else {
+                    // HTTP 环境：使用 CitySearch 纯 IP 定位
+                    console.log('🌐 使用 CitySearch IP 定位...');
+                    this._requestCitySearch(resolve);
+                }
             } catch (error) {
-                console.warn('⚠️ 网络定位异常');
+                console.warn('⚠️ 网络定位异常:', error);
                 resolve(null);
             }
+        });
+    }
+
+    /**
+     * 使用 Geolocation 定位（需要 HTTPS 或安全上下文）
+     */
+    _requestGeolocation(resolve) {
+        AMap.plugin('AMap.Geolocation', () => {
+            const geolocation = new AMap.Geolocation({
+                enableHighAccuracy: true,
+                timeout: 10000,
+                noCache: true
+            });
+
+            geolocation.getCurrentPosition((status, result) => {
+                if (status === 'complete' && result.position) {
+                    const { lng, lat } = result.position;
+                    const location = {
+                        lon: lng,
+                        lat: lat,
+                        source: '网络定位',
+                        city: result.addressComponent?.city || result.addressComponent?.province || ''
+                    };
+                    console.log('✓ Geolocation 定位成功:', location);
+                    resolve(location);
+                } else {
+                    console.warn('⚠️ Geolocation 定位失败，尝试 IP 定位...');
+                    this._requestCitySearch(resolve);
+                }
+            });
+        });
+    }
+
+    /**
+     * 使用 CitySearch 纯 IP 定位（HTTP 可用）
+     */
+    _requestCitySearch(resolve) {
+        AMap.plugin('AMap.CitySearch', () => {
+            const citySearch = new AMap.CitySearch();
+            
+            citySearch.getLocalCity((status, result) => {
+                if (status === 'complete' && result.info === 'SUCCESS') {
+                    const city = result.city;
+                    const bounds = result.bounds;
+                    
+                    // 获取城市中心点
+                    const center = bounds.getCenter();
+                    const location = {
+                        lon: center.getLng(),
+                        lat: center.getLat(),
+                        source: 'IP定位',
+                        city: city
+                    };
+                    console.log('✓ CitySearch IP 定位成功:', location);
+                    resolve(location);
+                } else {
+                    console.warn('⚠️ CitySearch IP 定位失败');
+                    resolve(null);
+                }
+            });
         });
     }
 }
@@ -1666,14 +1766,39 @@ class ResultRenderer {
     }
     
     renderFertilizerUsage(usage) {
+        // 配方肥养分比例定义
+        const formulaFertilizerRatio = {
+            N: 0.20,    // 氮 20%
+            P: 0.15,    // 磷 15%
+            K: 0.10     // 钾 10%
+        };
+        
         let html = '';
         for (const [key, value] of Object.entries(usage)) {
-            html += `
-                <div class="d-flex justify-content-between mb-3 p-2 bg-white rounded">
-                    <span class="fw-bold">${key}</span>
-                    <span class="text-primary fw-bold">${value} 公斤/亩</span>
-                </div>
-            `;
+            // 检查是否为配方肥
+            if (key.includes('配方肥')) {
+                const ratioStr = `N-P₂O₅-K₂O = ${(formulaFertilizerRatio.N * 100)}-${(formulaFertilizerRatio.P * 100)}-${(formulaFertilizerRatio.K * 100)}`;
+                html += `
+                    <div class="mb-3 p-2 bg-white rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">${key}</span>
+                            <span class="text-primary fw-bold">${value} 公斤/亩</span>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                <i class="fas fa-flask me-1"></i>养分比例: ${ratioStr}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="d-flex justify-content-between mb-3 p-2 bg-white rounded">
+                        <span class="fw-bold">${key}</span>
+                        <span class="text-primary fw-bold">${value} 公斤/亩</span>
+                    </div>
+                `;
+            }
         }
         document.getElementById('fertilizerUsage').innerHTML = html;
     }
@@ -1882,7 +2007,7 @@ class EventHandlers {
             });
         }
         
-        // 重新定位（GPS + 网络定位）
+        // 重新定位（网络定位优先，HTTP 环境下也可用）
         const relocateBtn = document.getElementById('relocateBtn');
         if (relocateBtn) {
             relocateBtn.addEventListener('click', async () => {
@@ -1891,7 +2016,8 @@ class EventHandlers {
                 
                 try {
                     const geoManager = new GeoLocationManager();
-                    const location = await geoManager.getUserLocation();
+                    // 使用强制重新定位，清除缓存
+                    const location = await geoManager.forceGetUserLocation();
                     
                     elements.lonInput.value = location.lon.toFixed(4);
                     elements.latInput.value = location.lat.toFixed(4);
