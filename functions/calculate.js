@@ -84,12 +84,18 @@ class CropRotationFertilizerModel {
     const lon = parseFloat(inputParams.lon) || 114.305;
     const lat = parseFloat(inputParams.lat) || 30.592;
     const customSoilData = inputParams.custom_soil_data;
+    const cropTypeCN = cropType === 'rice' ? '水稻' : '小麦';
 
     let soilN, soilP, soilK;
+    let dataSource = { AN: '模拟数据', AP: '模拟数据', AK: '模拟数据' };
+    let useCustomSoil = false;
+    
     if (customSoilData && customSoilData.AN && customSoilData.AP && customSoilData.AK) {
       soilN = customSoilData.AN;
       soilP = customSoilData.AP;
       soilK = customSoilData.AK;
+      useCustomSoil = true;
+      dataSource = { AN: '手动输入', AP: '手动输入', AK: '手动输入' };
     } else {
       const simulatedNutrients = generateSimulatedNutrients(lon, lat);
       soilN = simulatedNutrients.AN.value;
@@ -109,28 +115,58 @@ class CropRotationFertilizerModel {
     const superphosphate = fertP / this.defaultParams.superphosphate_P_content;
     const potassiumChloride = fertK / this.defaultParams.potassium_chloride_K_content;
 
+    const soilNutrients = [soilN, soilP, soilK];
+    const nutrientLevels = {
+      AN: getNutrientLevel(soilN, 'AN'),
+      AP: getNutrientLevel(soilP, 'AP'),
+      AK: getNutrientLevel(soilK, 'AK')
+    };
+
+    // 构建与原始 API 兼容的响应
     return {
-      crop: cropType,
+      fertilizer_usage: {
+        '尿素_基肥': Math.round(urea * 0.4 * 10) / 10,
+        '尿素_分蘖肥': Math.round(urea * 0.3 * 10) / 10,
+        '尿素_穗肥': Math.round(urea * 0.3 * 10) / 10,
+        '重过磷酸钙_基肥': Math.round(superphosphate * 0.7 * 10) / 10,
+        '氯化钾_基肥': Math.round(potassiumChloride * 0.5 * 10) / 10,
+        '氯化钾_追肥': Math.round(potassiumChloride * 0.5 * 10) / 10
+      },
+      stage_advice: {
+        '基肥': '播种前整地时深施',
+        '追肥': cropType === 'rice' ? '分蘖期和穗期追施' : '拔节期和孕穗期追施'
+      },
+      guidance: [
+        '1. 基肥占总氮肥的50%左右，磷钾肥全部作基肥',
+        '2. 分蘖肥在移栽后7-10天施用，促进分蘖',
+        '3. 穗肥在幼穗分化初期施用，促进大穗形成',
+        '4. 注意浅水施肥，提高肥料利用率'
+      ],
+      calc_params: {
+        target_yield: targetYield,
+        nutrient_demand: [reqN, reqP, reqK],
+        soil_supply: [supplyN, supplyP, supplyK],
+        straw_supply: [0, 0, 0],
+        soil_nutrients: soilNutrients,
+        nutrient_levels: nutrientLevels,
+        data_source: dataSource,
+        fertilizer_efficiency: [
+          params.N_fertilizer_efficiency * 100,
+          params.P_fertilizer_efficiency * 100,
+          params.K_fertilizer_efficiency * 100
+        ],
+        recommended_sowing_date: cropType === 'rice' ? '06-15' : '11-01',
+        recommended_sowing_date_start: cropType === 'rice' ? '06-10' : '10-25',
+        recommended_sowing_date_end: cropType === 'rice' ? '06-20' : '11-05',
+        is_default_data: !useCustomSoil,
+        use_custom_soil: useCustomSoil
+      },
+      // 兼容字段
+      crop: cropTypeCN,
       target_yield: targetYield,
       soil_data: { AN: soilN, AP: soilP, AK: soilK },
       nutrient_requirement: { N: reqN, P: reqP, K: reqK },
-      soil_supply: { N: supplyN, P: supplyP, K: supplyK },
-      fertilizer_recommendation: {
-        urea: Math.round(urea * 10) / 10,
-        superphosphate: Math.round(superphosphate * 10) / 10,
-        potassium_chloride: Math.round(potassiumChloride * 10) / 10
-      },
-      application_schedule: {
-        base: {
-          urea: Math.round(urea * 0.4 * 10) / 10,
-          superphosphate: Math.round(superphosphate * 0.7 * 10) / 10,
-          potassium_chloride: Math.round(potassiumChloride * 0.5 * 10) / 10
-        },
-        topdressing: {
-          urea: Math.round(urea * 0.6 * 10) / 10,
-          potassium_chloride: Math.round(potassiumChloride * 0.5 * 10) / 10
-        }
-      }
+      soil_supply: { N: supplyN, P: supplyP, K: supplyK }
     };
   }
 }
