@@ -69,17 +69,46 @@ class GeoLocationManager {
     }
 
     /**
-     * 强制重新获取位置（清除缓存）
+     * 强制重新获取位置（清除缓存，优先使用GPS定位）
      */
     async forceGetUserLocation() {
-        console.log('🌍 强制重新获取用户位置...');
+        console.log('🌍 强制重新获取用户位置（优先GPS定位）...');
         this.currentLocation = null;
-        return this.getUserLocation();
+        
+        // 检测是否为安全上下文
+        const isSecure = this.isSecureContext();
+        console.log(`🔒 安全上下文: ${isSecure ? '是' : '否'} (${location.protocol})`);
+
+        // 方法1: 优先尝试 GPS 定位（仅在 HTTPS 或 localhost 下可用）
+        if (isSecure) {
+            const gpsLocation = await this.requestGPSLocation();
+            if (gpsLocation) {
+                this.currentLocation = gpsLocation;
+                console.log('✓ GPS 定位成功');
+                return gpsLocation;
+            }
+        } else {
+            console.warn('⚠️ HTTP 环境，GPS 定位不可用（需要 HTTPS）');
+        }
+
+        // 方法2: 降级使用网络定位（高德地图IP定位）
+        const networkLocation = await this.requestNetworkLocation();
+        if (networkLocation) {
+            this.currentLocation = networkLocation;
+            console.log('✓ 网络定位成功');
+            return networkLocation;
+        }
+
+        // 方法3: 返回默认位置
+        const defaultLocation = { lon: 118.763, lat: 32.057, source: '默认位置(南京)' };
+        this.currentLocation = defaultLocation;
+        console.log('⚠️ 使用默认位置');
+        return defaultLocation;
     }
 
     /**
-     * 获取用户位置（优先级：网络定位 → GPS定位 → 默认位置）
-     * 注意：HTTP 环境下 GPS 定位不可用，优先使用网络定位
+     * 获取用户位置（优先级：GPS定位 → 网络定位 → 默认位置）
+     * 注意：HTTP 环境下 GPS 定位不可用，会自动降级到网络定位
      */
     async getUserLocation() {
         console.log('🌍 开始获取用户位置...');
@@ -93,15 +122,7 @@ class GeoLocationManager {
         const isSecure = this.isSecureContext();
         console.log(`🔒 安全上下文: ${isSecure ? '是' : '否'} (${location.protocol})`);
 
-        // 方法1: 优先尝试网络定位（HTTP/HTTPS 都可用）
-        const networkLocation = await this.requestNetworkLocation();
-        if (networkLocation) {
-            this.currentLocation = networkLocation;
-            console.log('✓ 网络定位成功');
-            return networkLocation;
-        }
-
-        // 方法2: 仅在安全上下文中尝试 GPS 定位
+        // 方法1: 优先尝试 GPS 定位（仅在 HTTPS 或 localhost 下可用）
         if (isSecure) {
             const gpsLocation = await this.requestGPSLocation();
             if (gpsLocation) {
@@ -110,7 +131,15 @@ class GeoLocationManager {
                 return gpsLocation;
             }
         } else {
-            console.warn('⚠️ HTTP 环境，跳过 GPS 定位（需要 HTTPS）');
+            console.warn('⚠️ HTTP 环境，GPS 定位不可用（需要 HTTPS）');
+        }
+
+        // 方法2: 降级使用网络定位（高德地图IP定位）
+        const networkLocation = await this.requestNetworkLocation();
+        if (networkLocation) {
+            this.currentLocation = networkLocation;
+            console.log('✓ 网络定位成功');
+            return networkLocation;
         }
 
         // 方法3: 返回默认位置
