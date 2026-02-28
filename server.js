@@ -5,6 +5,9 @@
 
 'use strict';
 
+// 加载环境变量（必须在其他模块之前加载）
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -758,17 +761,18 @@ function generateSimulatedNutrients(lon, lat) {
 
 // ==================== 和风天气 JWT 认证配置 ====================
 // 以下信息均从 https://console.qweather.com 控制台获取
-// 建议使用环境变量配置，避免将敏感信息提交到代码仓库
 const QWEATHER_CONFIG = {
-  // 私钥内容（ed25519-private.pem 全文，包含 -----BEGIN/END PRIVATE KEY-----）
-  // 环境变量 QWEATHER_PRIVATE_KEY 需要包含完整的私钥内容（包括 BEGIN/END 行）
-  privateKey: process.env.QWEATHER_PRIVATE_KEY || '',
-  // 凭据ID（控制台 -> 项目 -> 凭据 -> Key ID）
-  keyId: process.env.QWEATHER_KEY_ID || '',
-  // 项目ID（控制台 -> 项目 -> Project ID）
-  projectId: process.env.QWEATHER_PROJECT_ID || '',
-  // API Host（控制台里你专属的域名，如 abcdef.re.qweatherapi.com）
-  apiHost: process.env.QWEATHER_API_HOST || ''
+    // 私钥内容（ed25519-private.pem 全文，包含 -----BEGIN/END PRIVATE KEY-----）
+    // 请将从和风天气控制台下载的私钥文件完整内容粘贴到此处
+    privateKey: `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIIL/Uxau7gN5LYZwE/P+FFc6FZZ/+8fq5WxolE5BPp5a
+-----END PRIVATE KEY-----`,
+    // 凭据ID（控制台 -> 项目 -> 凭据 -> Key ID）
+    keyId: 'T9GYAGPRW3',
+    // 项目ID（控制台 -> 项目 -> Project ID）
+    projectId: '4JKQKW99BC',
+    // API Host（控制台里你专属的域名）
+    apiHost: 'mn7h2rh9hq.re.qweatherapi.com'
 };
 
 /**
