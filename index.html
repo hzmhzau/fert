@@ -832,87 +832,7 @@
                                 </h5>
                             </div>
 
-                            <!-- 作物类型选择 -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">
-                                    作物类型 <span class="text-danger">*</span>
-                                </label>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <input class="form-check-input d-none" type="radio" name="crop" id="rice" value="水稻" checked required>
-                                        <label class="crop-selection-card card p-3" for="rice">
-                                            <div class="d-flex align-items-center">
-                                                <i class="crop-icon">🌾</i>
-                                                <div>
-                                                    <h5 class="mb-1">水稻</h5>
-                                                    <p class="text-muted mb-0 small">适用于长江中下游稻区</p>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <input class="form-check-input d-none" type="radio" name="crop" id="wheat" value="小麦" required>
-                                        <label class="crop-selection-card card p-3" for="wheat">
-                                            <div class="d-flex align-items-center">
-                                                <i class="crop-icon">🌿</i>
-                                                <div>
-                                                    <h5 class="mb-1">小麦</h5>
-                                                    <p class="text-muted mb-0 small">适用于长江中下游麦区</p>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 基本参数 -->
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3">
-                                    <label for="yieldInput" class="form-label fw-bold">
-                                        预期产量 (公斤/亩) <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                               class="form-control"
-                                               id="yieldInput"
-                                               min="100"
-                                               max="1000"
-                                               value="500"
-                                               required
-                                               aria-describedby="yieldHelp">
-                                        <button type="button"
-                                                class="btn btn-outline-primary"
-                                                id="getPotentialYieldBtn"
-                                                title="根据当前位置获取GAEZ潜在产量">
-                                            <i class="fas fa-chart-line"></i>
-                                        </button>
-                                    </div>
-                                    <div id="yieldHelp" class="form-text">
-                                        <i class="fas fa-info-circle me-1"></i>请输入100-1000之间的产量值，或点击右侧按钮获取GAEZ潜在产量
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        请输入有效的产量值(100-1000公斤/亩)
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="dateInput" class="form-label fw-bold">
-                                        播种日期 <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date" 
-                                           class="form-control" 
-                                           id="dateInput" 
-                                           required
-                                           aria-describedby="dateHelp">
-                                    <div id="dateHelp" class="form-text">
-                                        <i class="fas fa-calendar me-1"></i>请选择计划播种日期
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        请选择播种日期
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 地理位置选择 -->
+                            <!-- 地块位置选择 -->
                             <div class="mb-4">
                                 <div class="d-flex align-items-center mb-3">
                                     <h5 class="mb-0 fw-bold">
@@ -1070,6 +990,86 @@
                                         </div>
                                     </div>
 
+                                </div>
+                            </div>
+                            
+                            <!-- 作物类型选择 -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    作物类型 <span class="text-danger">*</span>
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <input class="form-check-input d-none" type="radio" name="crop" id="rice" value="水稻" checked required>
+                                        <label class="crop-selection-card card p-3" for="rice">
+                                            <div class="d-flex align-items-center">
+                                                <i class="crop-icon">🌾</i>
+                                                <div>
+                                                    <h5 class="mb-1">水稻</h5>
+                                                    <p class="text-muted mb-0 small">适用于长江中下游稻区</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <input class="form-check-input d-none" type="radio" name="crop" id="wheat" value="小麦" required>
+                                        <label class="crop-selection-card card p-3" for="wheat">
+                                            <div class="d-flex align-items-center">
+                                                <i class="crop-icon">🌿</i>
+                                                <div>
+                                                    <h5 class="mb-1">小麦</h5>
+                                                    <p class="text-muted mb-0 small">适用于长江中下游麦区</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 基本参数 -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="yieldInput" class="form-label fw-bold">
+                                        预期产量 (公斤/亩) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number"
+                                               class="form-control"
+                                               id="yieldInput"
+                                               min="100"
+                                               max="1000"
+                                               value="500"
+                                               required
+                                               aria-describedby="yieldHelp">
+                                        <button type="button"
+                                                class="btn btn-outline-primary"
+                                                id="getPotentialYieldBtn"
+                                                title="根据当前位置获取GAEZ潜在产量">
+                                            <i class="fas fa-chart-line"></i>
+                                        </button>
+                                    </div>
+                                    <div id="yieldHelp" class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>请输入100-1000之间的产量值，或点击右侧按钮获取GAEZ潜在产量
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        请输入有效的产量值(100-1000公斤/亩)
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="dateInput" class="form-label fw-bold">
+                                        播种日期 <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="dateInput"
+                                           required
+                                           aria-describedby="dateHelp">
+                                    <div id="dateHelp" class="form-text">
+                                        <i class="fas fa-calendar me-1"></i>请选择计划播种日期
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        请选择播种日期
+                                    </div>
                                 </div>
                             </div>
                             
