@@ -33,10 +33,10 @@ const GEOTIFF_FILES = {
 };
 
 // GAEZ-V5 水稻潜在产量数据文件
-const GAEZ_RICE_YIELD_FILE = path.join(__dirname, 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.RCW.HILM_41d6e80a.tif');
+const GAEZ_RICE_YIELD_FILE = path.join(__dirname, 'GTiff', 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.RCW.HILM_41d6e80a.tif');
 
 // GAEZ-V5 小麦潜在产量数据文件
-const GAEZ_WHEAT_YIELD_FILE = path.join(__dirname, 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.WHE.HILM_69839c75.tif');
+const GAEZ_WHEAT_YIELD_FILE = path.join(__dirname, 'GTiff', 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.WHE.HILM_69839c75.tif');
 
 // GeoTIFF 缓存
 let geotiffCache = {
