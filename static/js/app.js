@@ -2008,7 +2008,7 @@ class ResultRenderer {
         let html = `
             <div class="card-header bg-info bg-opacity-10">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-line me-2 text-info"></i>GAEZ模型潜在产量
+                    <i class="fas fa-chart-line me-2 text-info"></i>GAEZ模型可获得产量
                 </h5>
             </div>
             <div class="card-body">
@@ -2257,23 +2257,11 @@ class EventHandlers {
         elements.lonInput.addEventListener('input', updateMapFromInput);
         elements.latInput.addEventListener('input', updateMapFromInput);
         
-        // 作物类型变化
+        // 作物类型变化 - 只更新UI提示，不改变地图位置
         document.querySelectorAll('input[name="crop"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const cropType = this.value;
-                const coords = cropType === '水稻'
-                    ? CITY_COORDS['南京']
-                    : CITY_COORDS['武汉'];
-
-                elements.lonInput.value = coords.lon;
-                elements.latInput.value = coords.lat;
-
-                if (AppState.map) {
-                    AppState.map.updateMarker(coords.lon, coords.lat, false);
-                }
-
-                AppState.userLocation = null;
-                locationManager.updateLocationInfo();
+                Utils.showNotification(`已选择${cropType}`, 'info');
             });
         });
         
