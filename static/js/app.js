@@ -2054,7 +2054,7 @@ class ResultRenderer {
         html += `
                 </div>
                 <div class="text-muted small mt-2">
-                    <i class="fas fa-info-circle me-1"></i>数据来源: GAEZ-V5 (全球农业生态区划)
+                    <i class="fas fa-info-circle me-1"></i>数据来源: 联合国粮食及农业组织GAEZ-V5 (全球农业生态区划模型)
                 </div>
             </div>
         `;

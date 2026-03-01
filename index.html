@@ -847,6 +847,10 @@
                                     </div>
                                 </div>
                                 <div class="card-body" id="mapCardBody" style="display: block;">
+ 
+                                    <!-- 地图容器 -->
+                                    <div id="mapContainer" class="map-container-expanded"></div>
+
                                     <!-- 控制按钮 -->
                                     <div class="d-flex gap-2 mb-3" id="mapControlButtons" style="display: flex;">
                                         <button type="button" class="btn btn-sm btn-outline-success" id="reloadMapBtn">
@@ -857,8 +861,6 @@
                                         </button>
                                     </div>
 
-                                    <!-- 地图容器 -->
-                                    <div id="mapContainer" class="map-container-expanded"></div>
 
                                     <!-- 地图信息提示 -->
                                     <div class="mt-3">
@@ -1076,7 +1078,7 @@
                                 </div>
                                 <p class="text-muted small mb-3">
                                     <i class="fas fa-lightbulb me-1"></i>
-                                    如果不填写,系统将根据经纬度从土壤数据库自动获取
+                                    如果不填写,系统根据您输入的经纬度从土壤数据库中获取碱解氮、有效磷、有效钾含量。
                                 </p>
                                 
                                 <div class="row" id="soilInputs" style="display: none;">
@@ -1144,12 +1146,12 @@
                                     </div>
                                 </div>
                             </div>
-
+<!-- 
                             <div class="alert alert-warning">
                                 <i class="fas fa-database me-2"></i>
                                 <span class="fw-bold">数据说明:</span>
                                 系统根据您输入的经纬度从土壤数据库中获取碱解氮、有效磷、有效钾含量,用于精准计算施肥方案。您也可以选择手动输入土壤养分数据。
-                            </div>
+                            </div> -->
 
                             <!-- 提交按钮 -->
                             <div class="text-center mt-4">
