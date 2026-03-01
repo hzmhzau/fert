@@ -827,12 +827,10 @@
                         <form id="fertilizerForm" novalidate>
                             <!-- 地块位置选择 -->
                             <div class="mb-4">
-                                <div class="d-flex align-items-center mb-3">
-                                    <h5 class="mb-0 fw-bold">
-                                        <i class="fas fa-map-marked-alt me-2"></i>地块位置选择
-                                    </h5>
-                                </div>
-                                <p class="text-muted small mb-4">
+                                <h6 class="mb-3 fw-bold section-title">
+                                    <i class="fas fa-map-marked-alt me-2 text-primary"></i>地块位置选择
+                                </h6>
+                                <p class="text-muted small mb-3">
                                     <i class="fas fa-info-circle me-1"></i>
                                     请选择以下两种方式之一来确定田块位置。支持手动输入经纬度或在地图上选点。
                                 </p>
@@ -989,9 +987,9 @@
                             
                             <!-- 作物类型选择 -->
                             <div class="mb-4">
-                                <label class="form-label fw-bold">
-                                    作物类型 <span class="text-danger">*</span>
-                                </label>
+                                <h6 class="mb-3 fw-bold section-title">
+                                    <i class="fas fa-seedling me-2 text-primary"></i>作物类型 <span class="text-danger">*</span>
+                                </h6>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <input class="form-check-input d-none" type="radio" name="crop" id="rice" value="水稻" checked required>
@@ -1020,59 +1018,59 @@
                                 </div>
                             </div>
                             
-                            <!-- 基本参数 -->
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3">
-                                    <label for="yieldInput" class="form-label fw-bold">
-                                        预期产量 (公斤/亩) <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                               class="form-control"
-                                               id="yieldInput"
-                                               min="100"
-                                               max="1000"
-                                               value="500"
-                                               required
-                                               aria-describedby="yieldHelp">
-                                        <button type="button"
-                                                class="btn btn-outline-primary"
-                                                id="getPotentialYieldBtn"
-                                                title="根据当前位置获取GAEZ潜在产量">
-                                            <i class="fas fa-chart-line"></i>
-                                        </button>
-                                    </div>
-                                    <div id="yieldHelp" class="form-text">
-                                        <i class="fas fa-info-circle me-1"></i>请输入100-1000之间的产量值，或点击右侧按钮获取GAEZ潜在产量
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        请输入有效的产量值(100-1000公斤/亩)
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="dateInput" class="form-label fw-bold">
-                                        播种日期 <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date"
+                            <!-- 预期产量 -->
+                            <div class="mb-4">
+                                <h6 class="mb-3 fw-bold section-title">
+                                    <i class="fas fa-chart-bar me-2 text-primary"></i>预期产量 (公斤/亩) <span class="text-danger">*</span>
+                                </h6>
+                                <div class="input-group">
+                                    <input type="number"
                                            class="form-control"
-                                           id="dateInput"
+                                           id="yieldInput"
+                                           min="100"
+                                           max="1000"
+                                           value="500"
                                            required
-                                           aria-describedby="dateHelp">
-                                    <div id="dateHelp" class="form-text">
-                                        <i class="fas fa-calendar me-1"></i>请选择计划播种日期
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        请选择播种日期
-                                    </div>
+                                           aria-describedby="yieldHelp">
+                                    <button type="button"
+                                            class="btn btn-outline-primary"
+                                            id="getPotentialYieldBtn"
+                                            title="根据当前位置获取GAEZ潜在产量">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
+                                </div>
+                                <div id="yieldHelp" class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>请输入100-1000之间的产量值，或点击右侧按钮获取GAEZ潜在产量
+                                </div>
+                                <div class="invalid-feedback">
+                                    请输入有效的产量值(100-1000公斤/亩)
+                                </div>
+                            </div>
+                            
+                            <!-- 播种日期 -->
+                            <div class="mb-4">
+                                <h6 class="mb-3 fw-bold section-title">
+                                    <i class="fas fa-calendar-alt me-2 text-primary"></i>播种日期 <span class="text-danger">*</span>
+                                </h6>
+                                <input type="date"
+                                       class="form-control"
+                                       id="dateInput"
+                                       required
+                                       aria-describedby="dateHelp">
+                                <div id="dateHelp" class="form-text">
+                                    <i class="fas fa-calendar me-1"></i>请选择计划播种日期
+                                </div>
+                                <div class="invalid-feedback">
+                                    请选择播种日期
                                 </div>
                             </div>
                             
                             <!-- 土壤养分输入选项 -->
                             <div class="soil-input-section" id="soilInputSection">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0 fw-bold">
-                                        <i class="fas fa-vial me-2"></i>土壤养分输入
-                                    </h5>
+                                <div class="mb-3">
+                                    <h6 class="mb-3 fw-bold section-title">
+                                        <i class="fas fa-vial me-2 text-primary"></i>土壤养分输入
+                                    </h6>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="customSoilToggle" aria-label="切换手动输入土壤养分">
                                         <span class="toggle-slider"></span>
