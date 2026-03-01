@@ -15,15 +15,52 @@ const AppState = {
     marker: null
 };
 
-// 城市坐标映射
+// 城市坐标映射 - 湖北、安徽、江苏地级市
 const CITY_COORDS = {
+    // 湖北省地级市
+    "武汉": { lon: 114.305, lat: 30.593 },
+    "黄石": { lon: 115.039, lat: 30.200 },
+    "十堰": { lon: 110.788, lat: 32.629 },
+    "宜昌": { lon: 111.286, lat: 30.692 },
+    "襄阳": { lon: 112.122, lat: 32.009 },
+    "鄂州": { lon: 114.894, lat: 30.391 },
+    "荆门": { lon: 112.204, lat: 31.035 },
+    "孝感": { lon: 113.916, lat: 30.925 },
+    "荆州": { lon: 112.240, lat: 30.327 },
+    "黄冈": { lon: 114.872, lat: 30.455 },
+    "咸宁": { lon: 114.322, lat: 29.841 },
+    "随州": { lon: 113.383, lat: 31.690 },
+    // 安徽省地级市
+    "合肥": { lon: 117.283, lat: 31.861 },
+    "芜湖": { lon: 118.376, lat: 31.328 },
+    "蚌埠": { lon: 117.363, lat: 32.940 },
+    "淮南": { lon: 117.018, lat: 32.647 },
+    "马鞍山": { lon: 118.507, lat: 31.670 },
+    "淮北": { lon: 116.798, lat: 33.956 },
+    "铜陵": { lon: 117.812, lat: 30.946 },
+    "安庆": { lon: 117.043, lat: 30.510 },
+    "黄山": { lon: 118.337, lat: 29.715 },
+    "滁州": { lon: 118.316, lat: 32.304 },
+    "阜阳": { lon: 115.814, lat: 32.890 },
+    "宿州": { lon: 116.964, lat: 33.646 },
+    "六安": { lon: 116.498, lat: 31.734 },
+    "亳州": { lon: 115.778, lat: 33.871 },
+    "池州": { lon: 117.489, lat: 30.657 },
+    "宣城": { lon: 118.759, lat: 30.941 },
+    // 江苏省地级市
     "南京": { lon: 118.763, lat: 32.057 },
-    "武汉": { lon: 114.305, lat: 30.592 },
-    "长沙": { lon: 112.938, lat: 28.228 },
-    "南昌": { lon: 115.858, lat: 28.676 },
-    "杭州": { lon: 120.153, lat: 30.267 },
-    "上海": { lon: 121.473, lat: 31.230 },
-    "合肥": { lon: 117.283, lat: 31.861 }
+    "无锡": { lon: 120.263, lat: 31.570 },
+    "徐州": { lon: 117.185, lat: 34.262 },
+    "常州": { lon: 119.974, lat: 31.812 },
+    "苏州": { lon: 120.595, lat: 31.299 },
+    "南通": { lon: 120.894, lat: 31.981 },
+    "连云港": { lon: 119.222, lat: 34.597 },
+    "淮安": { lon: 119.021, lat: 33.597 },
+    "盐城": { lon: 120.139, lat: 33.379 },
+    "扬州": { lon: 119.421, lat: 32.393 },
+    "镇江": { lon: 119.425, lat: 32.188 },
+    "泰州": { lon: 119.922, lat: 32.456 },
+    "宿迁": { lon: 118.275, lat: 33.963 }
 };
 
 // 养分水平样式映射
@@ -47,7 +84,9 @@ const API = {
         TEST_GEOTIFF: '/test_geotiff',
         API_TEST: '/api/test',
         WEATHER: '/api/weather',
-        FERTILIZER_TIMING: '/api/fertilizer_timing'
+        FERTILIZER_TIMING: '/api/fertilizer_timing',
+        GAEZ_RICE_YIELD: '/api/gaez_rice_yield',
+        GAEZ_WHEAT_YIELD: '/api/gaez_wheat_yield'
     },
     TIMEOUT: 30000 // 30秒超时
 };
@@ -1092,13 +1131,28 @@ class FormHandler {
         const data = this.collectData();
         
         Utils.showLoading(
-            AppState.isServerOnline 
-                ? '正在获取土壤数据并计算施肥方案,请稍候...' 
+            AppState.isServerOnline
+                ? '正在获取土壤数据并计算施肥方案,请稍候...'
                 : '服务器离线,正在使用模拟数据计算...'
         );
         
         try {
             let result;
+            let potentialYields = { rice: null, wheat: null };
+            
+            // 获取GAEZ潜在产量
+            if (AppState.isServerOnline) {
+                try {
+                    const [riceResult, wheatResult] = await Promise.all([
+                        fetch(`${API.BASE_URL}${API.ENDPOINTS.GAEZ_RICE_YIELD}?lon=${data.lon}&lat=${data.lat}`).then(r => r.json()),
+                        fetch(`${API.BASE_URL}${API.ENDPOINTS.GAEZ_WHEAT_YIELD}?lon=${data.lon}&lat=${data.lat}`).then(r => r.json())
+                    ]);
+                    if (riceResult.success) potentialYields.rice = riceResult;
+                    if (wheatResult.success) potentialYields.wheat = wheatResult;
+                } catch (e) {
+                    console.warn('获取GAEZ潜在产量失败:', e);
+                }
+            }
             
             if (AppState.isServerOnline) {
                 result = await APIService.calculate(data);
@@ -1109,6 +1163,9 @@ class FormHandler {
                 AppState.currentDataMode = 'offline';
                 new ServerStatusManager(this.elements).showOfflineAlert();
             }
+            
+            // 将潜在产量添加到结果中
+            result.potential_yields = potentialYields;
             
             AppState.lastCalculation = { data, result };
             new ResultRenderer(this.elements).render(result, data);
@@ -1244,6 +1301,9 @@ class ResultRenderer {
         this.renderStageAdvice(result.stage_advice);
         this.renderGuidance(result.guidance);
         this.renderNutrientBalance(result);
+        
+        // 渲染GAEZ潜在产量
+        this.renderPotentialYields(result.potential_yields);
         
         // 获取并渲染天气信息
         this.renderWeatherInfo(inputData);
@@ -1685,7 +1745,9 @@ class ResultRenderer {
         this.updateNutrientBadge('soilPLevel', levels.AP);
         this.updateNutrientBadge('soilKLevel', levels.AK);
         
-        const sourceText = Object.values(sources).join(', ');
+        // 去重数据来源，相同来源只显示一次
+        const uniqueSources = [...new Set(Object.values(sources))];
+        const sourceText = uniqueSources.join(', ');
         document.getElementById('dataSourceText').textContent = sourceText;
         
         const isDefault = calcParams.is_default_data;
@@ -1924,6 +1986,80 @@ class ResultRenderer {
             { label: '磷(P₂O₅)', value: P },
             { label: '钾(K₂O)', value: K }
         ];
+    }
+    
+    /**
+     * 渲染GAEZ潜在产量
+     */
+    renderPotentialYields(potentialYields) {
+        const container = document.getElementById('potentialYieldsContainer');
+        if (!container) return;
+        
+        if (!potentialYields || (!potentialYields.rice && !potentialYields.wheat)) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        
+        const riceData = potentialYields.rice;
+        const wheatData = potentialYields.wheat;
+        
+        let html = `
+            <div class="card-header bg-info bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-info"></i>GAEZ潜在产量
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+        `;
+        
+        if (riceData) {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-seedling fa-2x text-success"></i>
+                            </div>
+                            <h6 class="text-muted">水稻潜在产量（干重）</h6>
+                            <div class="fs-3 fw-bold text-primary">${riceData.yield_per_mu.toFixed(1)}</div>
+                            <div class="text-muted small">kg/亩</div>
+                            <div class="text-muted small mt-1">(${riceData.yield_per_hectare.toFixed(1)} kg/ha)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (wheatData) {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-wheat-awn fa-2x text-warning"></i>
+                            </div>
+                            <h6 class="text-muted">小麦潜在产量（干重）</h6>
+                            <div class="fs-3 fw-bold text-primary">${wheatData.yield_per_mu.toFixed(1)}</div>
+                            <div class="text-muted small">kg/亩</div>
+                            <div class="text-muted small mt-1">(${wheatData.yield_per_hectare.toFixed(1)} kg/ha)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+                <div class="text-muted small mt-2">
+                    <i class="fas fa-info-circle me-1"></i>数据来源: GAEZ-V5 (全球农业生态区划)
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
     }
 }
 
@@ -2282,6 +2418,98 @@ class EventHandlers {
                 }, 100);
             }
         });
+
+        // GAEZ潜在产量获取按钮
+        const getPotentialYieldBtn = document.getElementById('getPotentialYieldBtn');
+        if (getPotentialYieldBtn) {
+            getPotentialYieldBtn.addEventListener('click', async () => {
+                const lon = parseFloat(elements.lonInput.value);
+                const lat = parseFloat(elements.latInput.value);
+                
+                if (!lon || !lat) {
+                    Utils.showNotification('请先输入经纬度或选择位置', 'warning');
+                    return;
+                }
+                
+                // 验证坐标范围
+                if (lon < 110 || lon > 122 || lat < 28 || lat > 36) {
+                    Utils.showNotification('坐标超出长江中下游地区范围', 'warning');
+                    return;
+                }
+                
+                getPotentialYieldBtn.disabled = true;
+                getPotentialYieldBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                try {
+                    // 同时获取水稻和小麦潜在产量
+                    const [riceResult, wheatResult] = await Promise.all([
+                        fetch(`${API.BASE_URL}${API.ENDPOINTS.GAEZ_RICE_YIELD}?lon=${lon}&lat=${lat}`),
+                        fetch(`${API.BASE_URL}${API.ENDPOINTS.GAEZ_WHEAT_YIELD}?lon=${lon}&lat=${lat}`)
+                    ]);
+                    
+                    const riceData = await riceResult.json();
+                    const wheatData = await wheatResult.json();
+                    
+                    // 显示潜在产量卡片
+                    const potentialYieldCard = document.getElementById('potentialYieldCard');
+                    if (potentialYieldCard) {
+                        potentialYieldCard.style.display = 'block';
+                    }
+                    
+                    // 更新水稻产量显示
+                    const riceYieldEl = document.getElementById('ricePotentialYield');
+                    if (riceYieldEl) {
+                        if (riceData.success && riceData.yield_per_mu) {
+                            riceYieldEl.textContent = riceData.yield_per_mu.toFixed(1);
+                        } else {
+                            riceYieldEl.textContent = '--';
+                        }
+                    }
+                    
+                    // 更新小麦产量显示
+                    const wheatYieldEl = document.getElementById('wheatPotentialYield');
+                    if (wheatYieldEl) {
+                        if (wheatData.success && wheatData.yield_per_mu) {
+                            wheatYieldEl.textContent = wheatData.yield_per_mu.toFixed(1);
+                        } else {
+                            wheatYieldEl.textContent = '--';
+                        }
+                    }
+                    
+                    // 根据当前作物类型设置预期产量
+                    const cropRadio = document.querySelector('input[name="crop"]:checked');
+                    const currentCrop = cropRadio ? cropRadio.value : '水稻';
+                    
+                    if (currentCrop === '水稻' && riceData.success && riceData.yield_per_mu) {
+                        elements.yieldInput.value = Math.round(riceData.yield_per_mu);
+                        Utils.showNotification(`已根据GAEZ数据设置水稻预期产量: ${Math.round(riceData.yield_per_mu)} kg/亩`, 'success');
+                    } else if (currentCrop === '小麦' && wheatData.success && wheatData.yield_per_mu) {
+                        elements.yieldInput.value = Math.round(wheatData.yield_per_mu);
+                        Utils.showNotification(`已根据GAEZ数据设置小麦预期产量: ${Math.round(wheatData.yield_per_mu)} kg/亩`, 'success');
+                    } else {
+                        Utils.showNotification('已获取GAEZ潜在产量数据', 'info');
+                    }
+                    
+                } catch (error) {
+                    console.error('获取GAEZ潜在产量失败:', error);
+                    Utils.showNotification('获取GAEZ潜在产量失败，请检查网络连接', 'danger');
+                } finally {
+                    getPotentialYieldBtn.disabled = false;
+                    getPotentialYieldBtn.innerHTML = '<i class="fas fa-chart-line"></i>';
+                }
+            });
+        }
+        
+        // 关闭潜在产量卡片
+        const closePotentialYieldBtn = document.getElementById('closePotentialYieldBtn');
+        if (closePotentialYieldBtn) {
+            closePotentialYieldBtn.addEventListener('click', () => {
+                const potentialYieldCard = document.getElementById('potentialYieldCard');
+                if (potentialYieldCard) {
+                    potentialYieldCard.style.display = 'none';
+                }
+            });
+        }
     }
 }
 

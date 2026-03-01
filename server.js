@@ -32,9 +32,17 @@ const GEOTIFF_FILES = {
   AK: path.join(__dirname, 'GTiff', 'AK_5-15cm_1km_clip.tif')
 };
 
+// GAEZ-V5 水稻潜在产量数据文件
+const GAEZ_RICE_YIELD_FILE = path.join(__dirname, 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.RCW.HILM_41d6e80a.tif');
+
+// GAEZ-V5 小麦潜在产量数据文件
+const GAEZ_WHEAT_YIELD_FILE = path.join(__dirname, 'cropped_GAEZ-V5.RES05-YCX30AS.HP0120.AGERA5.HIST.WHE.HILM_69839c75.tif');
+
 // GeoTIFF 缓存
 let geotiffCache = {
   AN: null, AP: null, AK: null,
+  rice_yield: null,
+  wheat_yield: null,
   metadata: null
 };
 
@@ -77,6 +85,68 @@ async function loadGeoTIFFs() {
       }
     }
     
+    // 加载GAEZ-V5水稻潜在产量数据文件
+    if (fs.existsSync(GAEZ_RICE_YIELD_FILE)) {
+      try {
+        const tiff = await GeoTIFF.fromFile(GAEZ_RICE_YIELD_FILE);
+        const image = await tiff.getImage();
+        const rasters = await image.readRasters();
+        const bbox = image.getBoundingBox();
+        const width = image.getWidth();
+        const height = image.getHeight();
+        
+        geotiffCache.rice_yield = {
+          data: rasters[0],
+          width,
+          height,
+          bbox,
+          minX: bbox[0],
+          maxY: bbox[3],
+          maxX: bbox[2],
+          minY: bbox[1],
+          cellWidth: (bbox[2] - bbox[0]) / width,
+          cellHeight: (bbox[3] - bbox[1]) / height
+        };
+        
+        console.log(`[GeoTIFF] GAEZ-V5水稻潜在产量加载成功: ${width}x${height}, 范围: [${bbox.join(', ')}]`);
+      } catch (e) {
+        console.warn(`[GeoTIFF] GAEZ-V5水稻潜在产量加载失败:`, e.message);
+      }
+    } else {
+      console.warn(`[GeoTIFF] GAEZ-V5水稻潜在产量文件不存在: ${GAEZ_RICE_YIELD_FILE}`);
+    }
+    
+    // 加载GAEZ-V5小麦潜在产量数据文件
+    if (fs.existsSync(GAEZ_WHEAT_YIELD_FILE)) {
+      try {
+        const tiff = await GeoTIFF.fromFile(GAEZ_WHEAT_YIELD_FILE);
+        const image = await tiff.getImage();
+        const rasters = await image.readRasters();
+        const bbox = image.getBoundingBox();
+        const width = image.getWidth();
+        const height = image.getHeight();
+        
+        geotiffCache.wheat_yield = {
+          data: rasters[0],
+          width,
+          height,
+          bbox,
+          minX: bbox[0],
+          maxY: bbox[3],
+          maxX: bbox[2],
+          minY: bbox[1],
+          cellWidth: (bbox[2] - bbox[0]) / width,
+          cellHeight: (bbox[3] - bbox[1]) / height
+        };
+        
+        console.log(`[GeoTIFF] GAEZ-V5小麦潜在产量加载成功: ${width}x${height}, 范围: [${bbox.join(', ')}]`);
+      } catch (e) {
+        console.warn(`[GeoTIFF] GAEZ-V5小麦潜在产量加载失败:`, e.message);
+      }
+    } else {
+      console.warn(`[GeoTIFF] GAEZ-V5小麦潜在产量文件不存在: ${GAEZ_WHEAT_YIELD_FILE}`);
+    }
+    
     geotiffCache.metadata = { loaded: true, timestamp: Date.now() };
     return true;
   } catch (e) {
@@ -90,6 +160,72 @@ async function loadGeoTIFFs() {
  */
 function extractValueFromGeoTIFF(lon, lat, layer) {
   const cache = geotiffCache[layer];
+  if (!cache || !cache.data) return null;
+  
+  // 检查坐标是否在范围内
+  if (lon < cache.minX || lon > cache.maxX || lat < cache.minY || lat > cache.maxY) {
+    return null;
+  }
+  
+  // 计算像素位置
+  const col = Math.floor((lon - cache.minX) / cache.cellWidth);
+  const row = Math.floor((cache.maxY - lat) / cache.cellHeight);
+  
+  // 边界检查
+  if (col < 0 || col >= cache.width || row < 0 || row >= cache.height) {
+    return null;
+  }
+  
+  // 获取像素值
+  const idx = row * cache.width + col;
+  const value = cache.data[idx];
+  
+  // 检查是否为NoData值（通常为负数或极大值）
+  if (value < -9999 || value > 100000 || value === -9999 || value === -32768) {
+    return null;
+  }
+  
+  return value;
+}
+
+/**
+ * 从GAEZ-V5水稻潜在产量TIFF文件中提取指定坐标的产量值
+ */
+function extractRiceYieldFromGeoTIFF(lon, lat) {
+  const cache = geotiffCache.rice_yield;
+  if (!cache || !cache.data) return null;
+  
+  // 检查坐标是否在范围内
+  if (lon < cache.minX || lon > cache.maxX || lat < cache.minY || lat > cache.maxY) {
+    return null;
+  }
+  
+  // 计算像素位置
+  const col = Math.floor((lon - cache.minX) / cache.cellWidth);
+  const row = Math.floor((cache.maxY - lat) / cache.cellHeight);
+  
+  // 边界检查
+  if (col < 0 || col >= cache.width || row < 0 || row >= cache.height) {
+    return null;
+  }
+  
+  // 获取像素值
+  const idx = row * cache.width + col;
+  const value = cache.data[idx];
+  
+  // 检查是否为NoData值（通常为负数或极大值）
+  if (value < -9999 || value > 100000 || value === -9999 || value === -32768) {
+    return null;
+  }
+  
+  return value;
+}
+
+/**
+ * 从GAEZ-V5小麦潜在产量TIFF文件中提取指定坐标的产量值
+ */
+function extractWheatYieldFromGeoTIFF(lon, lat) {
+  const cache = geotiffCache.wheat_yield;
   if (!cache || !cache.data) return null;
   
   // 检查坐标是否在范围内
@@ -142,7 +278,7 @@ function getSoilNutrientsFromGeoTIFF(lon, lat) {
       layer: 'AN',
       description: '土壤碱解氮含量 (mg/kg)',
       nutrient_level: getNutrientLevel(AN / scaleFactors.AN, 'AN'),
-      data_source: 'GeoTIFF',
+      data_source: '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）',
       is_default: false
     } : null,
     AP: AP !== null ? {
@@ -151,7 +287,7 @@ function getSoilNutrientsFromGeoTIFF(lon, lat) {
       layer: 'AP',
       description: '土壤有效磷含量 (mg/kg)',
       nutrient_level: getNutrientLevel(AP / scaleFactors.AP, 'AP'),
-      data_source: 'GeoTIFF',
+      data_source: '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）',
       is_default: false
     } : null,
     AK: AK !== null ? {
@@ -160,11 +296,73 @@ function getSoilNutrientsFromGeoTIFF(lon, lat) {
       layer: 'AK',
       description: '土壤有效钾含量 (mg/kg)',
       nutrient_level: getNutrientLevel(AK / scaleFactors.AK, 'AK'),
-      data_source: 'GeoTIFF',
+      data_source: '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）',
       is_default: false
     } : null,
     has_valid_data: hasValidData,
     coordinate: { lon, lat }
+  };
+}
+
+/**
+ * 获取GAEZ-V5水稻潜在产量
+ */
+function getGAEZRiceYield(lon, lat) {
+  const yieldValue = extractRiceYieldFromGeoTIFF(lon, lat);
+  
+  if (yieldValue === null) {
+    return {
+      success: false,
+      error: '坐标超出数据范围或数据不可用',
+      coordinate: { lon, lat }
+    };
+  }
+  
+  // GAEZ数据通常以kg/ha为单位，转换为kg/亩（1公顷=15亩）
+  const yieldPerMu = Math.round(yieldValue * 0.06667 * 10) / 10;
+  
+  return {
+    success: true,
+    coordinate: { lon, lat },
+    raw_value: yieldValue,
+    yield_per_mu: yieldPerMu,
+    yield_per_hectare: yieldValue,
+    unit: 'kg/亩',
+    unit_hectare: 'kg/ha',
+    data_source: 'GAEZ-V5',
+    is_default: false,
+    message: '成功从GAEZ-V5数据中获取水稻潜在产量'
+  };
+}
+
+/**
+ * 获取GAEZ-V5小麦潜在产量
+ */
+function getGAEZWheatYield(lon, lat) {
+  const yieldValue = extractWheatYieldFromGeoTIFF(lon, lat);
+  
+  if (yieldValue === null) {
+    return {
+      success: false,
+      error: '坐标超出数据范围或数据不可用',
+      coordinate: { lon, lat }
+    };
+  }
+  
+  // GAEZ数据通常以kg/ha为单位，转换为kg/亩（1公顷=15亩）
+  const yieldPerMu = Math.round(yieldValue * 0.06667 * 10) / 10;
+  
+  return {
+    success: true,
+    coordinate: { lon, lat },
+    raw_value: yieldValue,
+    yield_per_mu: yieldPerMu,
+    yield_per_hectare: yieldValue,
+    unit: 'kg/亩',
+    unit_hectare: 'kg/ha',
+    data_source: 'GAEZ-V5',
+    is_default: false,
+    message: '成功从GAEZ-V5数据中获取小麦潜在产量'
   };
 }
 
@@ -368,19 +566,19 @@ class CropRotationFertilizerModel {
       if (geoTiffData.AN) {
         baseData.soil_N = geoTiffData.AN.value;
         baseData.nutrient_levels.AN = geoTiffData.AN.nutrient_level;
-        baseData.data_source.AN = 'GeoTIFF';
+        baseData.data_source.AN = '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）';
         baseData.is_default = false;
       }
       if (geoTiffData.AP) {
         baseData.soil_P = geoTiffData.AP.value;
         baseData.nutrient_levels.AP = geoTiffData.AP.nutrient_level;
-        baseData.data_source.AP = 'GeoTIFF';
+        baseData.data_source.AP = '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）';
         baseData.is_default = false;
       }
       if (geoTiffData.AK) {
         baseData.soil_K = geoTiffData.AK.value;
         baseData.nutrient_levels.AK = geoTiffData.AK.nutrient_level;
-        baseData.data_source.AK = 'GeoTIFF';
+        baseData.data_source.AK = '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）';
         baseData.is_default = false;
       }
     }
@@ -1527,9 +1725,9 @@ app.get('/test_geotiff', async (req, res) => {
     };
     
     // 更新数据来源标记
-    if (nutrients.AN) nutrients.AN.data_source = geoTiffData.AN ? 'GeoTIFF' : '模拟数据';
-    if (nutrients.AP) nutrients.AP.data_source = geoTiffData.AP ? 'GeoTIFF' : '模拟数据';
-    if (nutrients.AK) nutrients.AK.data_source = geoTiffData.AK ? 'GeoTIFF' : '模拟数据';
+    if (nutrients.AN) nutrients.AN.data_source = geoTiffData.AN ? '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）' : '模拟数据';
+    if (nutrients.AP) nutrients.AP.data_source = geoTiffData.AP ? '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）' : '模拟数据';
+    if (nutrients.AK) nutrients.AK.data_source = geoTiffData.AK ? '中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）' : '模拟数据';
     
     res.json({
       success: true,
@@ -1537,7 +1735,7 @@ app.get('/test_geotiff', async (req, res) => {
       nutrients,
       is_default_data: false,
       geotiff_loaded: geotiffCache.metadata?.loaded || false,
-      message: '从GeoTIFF文件读取土壤数据成功'
+      message: '从中国陆地表面建模土壤属性数据集（版本 2，CSDLv2）读取土壤数据成功'
     });
   } else {
     // 回退到模拟数据
@@ -1548,9 +1746,77 @@ app.get('/test_geotiff', async (req, res) => {
       nutrients,
       is_default_data: true,
       geotiff_loaded: geotiffCache.metadata?.loaded || false,
-      message: 'GeoTIFF数据不可用，使用模拟数据'
+      message: '土壤数据不可用，使用模拟数据'
     });
   }
+});
+
+// 获取GAEZ-V5水稻潜在产量
+app.get('/api/gaez_rice_yield', (req, res) => {
+  const lon = parseFloat(req.query.lon);
+  const lat = parseFloat(req.query.lat);
+  
+  if (isNaN(lon) || isNaN(lat)) {
+    return res.status(400).json({
+      success: false,
+      error: '经纬度参数必须提供'
+    });
+  }
+  
+  if (!(lon >= 110 && lon <= 122 && lat >= 28 && lat <= 33)) {
+    return res.status(400).json({
+      success: false,
+      error: `坐标超出范围：经度110-122, 纬度28-33, 当前: ${lon}, ${lat}`
+    });
+  }
+  
+  // 检查GAEZ数据是否已加载
+  if (!geotiffCache.rice_yield || !geotiffCache.rice_yield.data) {
+    return res.status(503).json({
+      success: false,
+      error: 'GAEZ-V5水稻潜在产量数据尚未加载，请稍后重试',
+      geotiff_loaded: false
+    });
+  }
+  
+  // 获取水稻潜在产量
+  const result = getGAEZRiceYield(lon, lat);
+  
+  res.json(result);
+});
+
+// 获取GAEZ-V5小麦潜在产量
+app.get('/api/gaez_wheat_yield', (req, res) => {
+  const lon = parseFloat(req.query.lon);
+  const lat = parseFloat(req.query.lat);
+  
+  if (isNaN(lon) || isNaN(lat)) {
+    return res.status(400).json({
+      success: false,
+      error: '经纬度参数必须提供'
+    });
+  }
+  
+  if (!(lon >= 110 && lon <= 122 && lat >= 28 && lat <= 33)) {
+    return res.status(400).json({
+      success: false,
+      error: `坐标超出范围：经度110-122, 纬度28-33, 当前: ${lon}, ${lat}`
+    });
+  }
+  
+  // 检查小麦数据是否已加载
+  if (!geotiffCache.wheat_yield || !geotiffCache.wheat_yield.data) {
+    return res.status(503).json({
+      success: false,
+      error: 'GAEZ-V5小麦潜在产量数据尚未加载，请稍后重试',
+      geotiff_loaded: false
+    });
+  }
+  
+  // 获取小麦潜在产量
+  const result = getGAEZWheatYield(lon, lat);
+  
+  res.json(result);
 });
 
 // 计算施肥方案

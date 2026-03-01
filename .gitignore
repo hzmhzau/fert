@@ -23,6 +23,21 @@ pids/
 .env.test.local
 .env.production.local
 
+# ==================== 大文件 ====================
+# GeoTIFF数据文件
+*.tif
+*.tiff
+*.tif.aux.xml
+
+# 压缩文件
+*.7z
+*.zip
+*.rar
+*.tar.gz
+
+# 密钥文件
+*.pem
+
 # ==================== IDE 和编辑器 ====================
 # VSCode
 .vscode/
