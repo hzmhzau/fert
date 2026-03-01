@@ -836,7 +836,7 @@
                             <div class="mb-4">
                                 <div class="d-flex align-items-center mb-3">
                                     <h5 class="mb-0 fw-bold">
-                                        <i class="fas fa-map-marked-alt me-2"></i>地理位置选择
+                                        <i class="fas fa-map-marked-alt me-2"></i>地块位置选择
                                     </h5>
                                 </div>
                                 <p class="text-muted small mb-4">
@@ -873,17 +873,18 @@
                                     <div id="mapContainer" class="map-container-expanded"></div>
 
                                     <!-- 地图信息提示 -->
-                                    <div class="map-info-box mt-3" id="mapInfoBox" style="display: block;">
-                                        <div class="d-flex align-items-start">
-                                            <i class="fas fa-info-circle me-2 mt-1"></i>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-2 fw-bold">地图选点说明:</p>
-                                                <ul class="mb-0 small">
-                                                    <li>点击地图选择位置或使用GPS定位，系统将自动更新经纬度</li>
-                                                    <li>支持搜索城市、地址快速定位</li>
-                                                    <li class="text-warning">⚠️ 坐标范围必须在长江中下游地区 (经度110-122°, 纬度28-33°)</li>
-                                                </ul>
-                                            </div>
+                                    <div class="mt-3">
+                                        <div class="d-flex align-items-center" style="cursor: pointer;" id="mapInfoToggle">
+                                            <i class="fas fa-info-circle me-2 text-success"></i>
+                                            <span class="fw-bold text-success">地图选点说明</span>
+                                            <i class="fas fa-chevron-down ms-2 text-success" id="mapInfoToggleIcon"></i>
+                                        </div>
+                                        <div class="map-info-box mt-2" id="mapInfoBox" style="display: none;">
+                                            <ul class="mb-0 small">
+                                                <li>点击地图选择位置或使用GPS定位，系统将自动更新经纬度</li>
+                                                <li>支持搜索城市、地址快速定位</li>
+                                                <li class="text-warning">⚠️ 坐标范围必须在长江中下游地区 (经度110-122°, 纬度28-33°)</li>
+                                            </ul>
                                         </div>
                                     </div>
 

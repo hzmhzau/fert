@@ -2008,7 +2008,7 @@ class ResultRenderer {
         let html = `
             <div class="card-header bg-info bg-opacity-10">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-line me-2 text-info"></i>GAEZ潜在产量
+                    <i class="fas fa-chart-line me-2 text-info"></i>GAEZ模型潜在产量
                 </h5>
             </div>
             <div class="card-body">
@@ -2101,6 +2101,24 @@ class EventHandlers {
         const mapInfoBox = document.getElementById('mapInfoBox');
         const mapControlButtons = document.getElementById('mapControlButtons');
         const mapCardBody = document.getElementById('mapCardBody');
+        
+        // 地图信息提示折叠功能
+        const mapInfoToggle = document.getElementById('mapInfoToggle');
+        const mapInfoToggleIcon = document.getElementById('mapInfoToggleIcon');
+        if (mapInfoToggle && mapInfoBox && mapInfoToggleIcon) {
+            mapInfoToggle.addEventListener('click', function() {
+                const isCollapsed = mapInfoBox.style.display === 'none';
+                if (isCollapsed) {
+                    mapInfoBox.style.display = 'block';
+                    mapInfoToggleIcon.classList.remove('fa-chevron-down');
+                    mapInfoToggleIcon.classList.add('fa-chevron-up');
+                } else {
+                    mapInfoBox.style.display = 'none';
+                    mapInfoToggleIcon.classList.remove('fa-chevron-up');
+                    mapInfoToggleIcon.classList.add('fa-chevron-down');
+                }
+            });
+        }
         
         // 手动输入经纬度折叠功能
         const toggleCoordBtn = document.getElementById('toggleCoordBtn');
